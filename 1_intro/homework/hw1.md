@@ -70,58 +70,102 @@ The port mapping 5433:5432 means:
 
 ## Prepare Postgres
 
+1. Start containers (postgres e pgadmin4)
+```bash
+docker-compose up -d
+```
+
+2. Open pgadmin on browser and connect to the PostgreSQL server
+`http://localhost:8080`
+
+Connect to the PostgreSQL Server
+
+    Add a New Server:
+        Click on the "Add New Server" button (or right-click on "Servers" in the navigation panel and select "Create > Server").
+
+    Configure the Server Connection:
+
+        In the General tab:
+            Name: Any name, e.g., TaxiDB.
+
+        In the Connection tab:
+            Host name/address: taxidb
+            Port: 5432 (the default PostgreSQL port inside the container)
+            Maintenance database: ny_green_taxi (your POSTGRES_DB)
+            Username: user
+            Password: mysecretpass
+
+    Save the Server:
+        Click Save to connect to the database.
+
+3. ingesting data to postgres container
+
+```bash
+    python ingest_data.py \
+    --user user \
+    --password mysecretpass \
+    --host localhost \
+    --port 5433 \
+    --db ny_green_taxi \
+    --table_name_1 green_taxi \
+    --table_name_2 zones 
+```
+
+4. Refresh the table and check the data
+
 
 ## Question 3
 During the period of October 1st 2019 (inclusive) and November 1st 2019 (exclusive), how many trips, respectively, happened:
 
-    - Up to 1 mile: 104,830
-    - In between 1 (exclusive) and 3 miles (inclusive): 198,995
-    - In between 3 (exclusive) and 7 miles (inclusive): 109,642
-    - In between 7 (exclusive) and 10 miles (inclusive): 27,686
-    - Over 10 miles: 35,201
+    - Up to 1 mile: 104.802
+    - In between 1 (exclusive) and 3 miles (inclusive): 198,924
+    - In between 3 (exclusive) and 7 miles (inclusive): 109,603
+    - In between 7 (exclusive) and 10 miles (inclusive): 27,678
+    - Over 10 miles: 35,189
 
 Queries
 ```sql
--- Question 3
--- Up to 1 mile
-SELECT COUNT(*) as trips_under_1_mile
-FROM green_taxi_data
+SELECT COUNT(*) as trips
+FROM green_taxi
 WHERE lpep_pickup_datetime >= '2019-10-01' 
   AND lpep_pickup_datetime < '2019-11-01'
+  AND lpep_dropoff_datetime < '2019-11-01'
   AND trip_distance <= 1;
 
--- In between 1 (exclusive) and 3 miles (inclusive)
-SELECT COUNT(*) as trips_between
-FROM green_taxi_data
+
+SELECT COUNT(*) as trips
+FROM green_taxi
 WHERE lpep_pickup_datetime >= '2019-10-01' 
   AND lpep_pickup_datetime < '2019-11-01'
-  AND trip_distance > 1.0
-  AND trip_distance <= 3.0;
+  AND lpep_dropoff_datetime < '2019-11-01'
+  AND trip_distance > 1
+  AND trip_distance <= 3;
 
 
--- In between 3 (exclusive) and 7 miles (inclusive)
-SELECT COUNT(*) as trips_between
-FROM green_taxi_data
+SELECT COUNT(*) as trips
+FROM green_taxi
 WHERE lpep_pickup_datetime >= '2019-10-01' 
   AND lpep_pickup_datetime < '2019-11-01'
+  AND lpep_dropoff_datetime < '2019-11-01'
   AND trip_distance > 3
   AND trip_distance <= 7;
 
--- In between 7 (exclusive) and 10 miles (inclusive),
-SELECT COUNT(*) as trips_between
-FROM green_taxi_data
+
+SELECT COUNT(*) as trips
+FROM green_taxi
 WHERE lpep_pickup_datetime >= '2019-10-01' 
   AND lpep_pickup_datetime < '2019-11-01'
+  AND lpep_dropoff_datetime < '2019-11-01'
   AND trip_distance > 7
   AND trip_distance <= 10;
 
--- Over 10 miles
-SELECT COUNT(*) as trips_over_10_miles
-FROM green_taxi_data
+
+SELECT COUNT(*) as trips
+FROM green_taxi
 WHERE lpep_pickup_datetime >= '2019-10-01' 
   AND lpep_pickup_datetime < '2019-11-01'
+  AND lpep_dropoff_datetime < '2019-11-01'
   AND trip_distance > 10;
-
 ```
 
 ## Question 4
@@ -139,7 +183,7 @@ Tip: For every day, we only care about one single trip with the longest distance
 SELECT 
     DATE(lpep_pickup_datetime) as pickup_date,
     MAX(trip_distance) as longest_distance
-FROM green_taxi_data
+FROM green_taxi
 GROUP BY DATE(lpep_pickup_datetime)
 ORDER BY longest_distance DESC
 LIMIT 10;
@@ -159,7 +203,7 @@ Consider only lpep_pickup_datetime when filtering by date.
 SELECT 
     z."Zone" as pickup_zone,    -- Get the zone name from zones table and alias it as pickup_zone
     ROUND(SUM(t.total_amount)) as total_amount  -- Calculate the sum of all total_amount values
-FROM green_taxi_data t    -- Main table with taxi trip data, aliased as 't'
+FROM green_taxi t    -- Main table with taxi trip data, aliased as 't'
 JOIN zones z ON t."PULocationID" = z."LocationID"    -- Join with zones table to get zone names
 -- matching pickup location IDs with zone locations
 WHERE DATE(t.lpep_pickup_datetime) = '2019-10-18'   -- Filter only trips from October 18, 2019
@@ -183,7 +227,7 @@ We need the name of the zone, not the ID.
 SELECT 
     dropoff_zone."Zone" as dropoff_zone,
     MAX(t.tip_amount) as max_tip
-FROM green_taxi_data t
+FROM green_taxi t
 JOIN zones pickup_zone 
     ON t."PULocationID" = pickup_zone."LocationID"
 JOIN zones dropoff_zone 

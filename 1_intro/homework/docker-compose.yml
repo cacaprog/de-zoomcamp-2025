@@ -3,17 +3,19 @@ services:
     image: postgres:14
     container_name: postgres
     environment:
-      - POSTGRES_USER=admin
+      - POSTGRES_USER=user
       - POSTGRES_PASSWORD=mysecretpass
-      - POSTGRES_DB=ny_taxi
+      - POSTGRES_DB=ny_green_taxi
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
-
+      - "5433:5432"
+    networks:
+      - pg-network
+    
   pgadmin:
     image: dpage/pgadmin4
-    container_name: pgadmin
+    container_name: pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -21,8 +23,14 @@ services:
       - "8080:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - pg-network
 
 
 volumes:
   postgres_data:
   pgadmin_data:
+
+networks:
+  pg-network:
+    external: true
