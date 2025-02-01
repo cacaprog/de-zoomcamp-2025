@@ -1,5 +1,3 @@
-version: "3.8"
-
 volumes:
   postgres-data:
     driver: local
@@ -7,10 +5,6 @@ volumes:
     driver: local
   zoomcamp-data:
     driver: local
-
-networks:
-  kestra-network:
-    driver: bridge
 
 services:
   postgres:
@@ -26,12 +20,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 10
-    networks:
-      - kestra-network
 
   kestra:
     image: kestra/kestra:latest
     pull_policy: always
+    # Note that this setup with a root user is intended for development purpose.
+    # Our base image runs without root, but the Docker Compose implementation needs root to access the Docker socket
+    # To run Kestra in a rootless mode in production, see: https://kestra.io/docs/installation/podman-compose
     user: "root"
     command: server standalone
     volumes:
@@ -70,9 +65,7 @@ services:
     depends_on:
       postgres:
         condition: service_started
-    networks:
-      - kestra-network
-
+    
   postgres_zoomcamp:
     image: postgres
     environment:
@@ -86,8 +79,6 @@ services:
     depends_on:
       kestra:
         condition: service_started
-    networks:
-      - kestra-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -99,5 +90,3 @@ services:
     depends_on:
       postgres_zoomcamp:
         condition: service_started
-    networks:
-      - kestra-network
