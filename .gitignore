@@ -173,4 +173,5 @@ cython_debug/
 # Files created
 .csv
 .csv.gz
-
+.parquet
+.parquet.crc
