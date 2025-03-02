@@ -174,4 +174,4 @@ cython_debug/
 .csv
 .csv.gz
 .parquet
-
+.parquet.crc
