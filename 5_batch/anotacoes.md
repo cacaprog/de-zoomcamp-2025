@@ -48,3 +48,32 @@ Spark cluster
 Reshuffling
 
 External merge sort
+
+### 5.5.1 - (Optional) Operations on Spark RDDs
+Resiliente distributed datasets (RDD)
+
+**Erro de serialização quando rodei na minha máquina. Tente intalar uma nova versão do spark.**
+
+Seria um mapReduce na unha?
+
+Filter
+
+key (hour, zone)
+value (amount, count)
+
+O `reduce` soma os valores dos values, no exemplo do professor.
+
+Depois, foi preciso incluir o `schema`
+
+
+
+
+### 5.5.2 - (Optional) Spark RDD mapPartition
+A ideia aqui é rodar um modelo de ml,
+no rdd, e para isso separaremos uma partição para isso.
+
+As partições não estiveram balanceadas
+
+Cientistas de dados gostam dos dados em dataframes.
+Para isso, existe o pandas!
+
